@@ -1,6 +1,7 @@
 # LexicalCast++
 ### Dependency and dynamic allocations free, `boost::lexical_cast` extension point
 ##### ... dependency free only if you bring your own `boost::lexical_cast` ;)
+[[WORK IN PROGRESS, INTERFACE MAY CHANGE]]
 
 ### Motivational examples
 >#### No forcing default constructors on your classes, or imperative directives
