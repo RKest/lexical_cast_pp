@@ -1,4 +1,4 @@
-#include "../include/lexical_cast.hpp"
+#include "../include/lpp/lexical_cast.hpp"
 
 #include "gmock/gmock.h"
 
@@ -77,8 +77,8 @@ template<> auto lpp::of<Bar> = lpp::type_list<double, std::string>{};
 
 using FooBar = std::variant<Foo, Bar>;
 template<> auto lpp::of<FooBar> = [](std::string_view name) {
-    if (name == "Foo") { return lpp::aux::extraction_info<FooBar>::of<Foo>(); }
-    if (name == "Bar") { return lpp::aux::extraction_info<FooBar>::of<Bar>(); }
+    if (name == "Foo") { return lpp::extraction_info<FooBar>::of<Foo>(); }
+    if (name == "Bar") { return lpp::extraction_info<FooBar>::of<Bar>(); }
     throw std::runtime_error("Invalid FooBar :c");
 };
 
@@ -105,29 +105,6 @@ struct Big {
 };
 
 template<> auto lpp::of<Big> = lpp::type_list<Example, FooBar, FooBar>{};
-
-#include <chrono>
-#include <ranges>
-
-std::vector<std::string_view>
-splitSV(std::string_view strv, char delim = ' ') {
-    std::vector<std::string_view> output;
-    size_t first = 0;
-
-    while (first < strv.size()) {
-        const auto second = strv.find(delim, first);
-
-        if (first != second)
-            output.emplace_back(strv.substr(first, second - first));
-
-        if (second == std::string_view::npos)
-            break;
-
-        first = second + 1;
-    }
-
-    return output;
-}
 
 TEST(ExtractionTest, ShouldDoBigExtraction) {
     constexpr std::string_view rep{"1 string 2 2.2 Foo 3 Bar 1.1 text"};

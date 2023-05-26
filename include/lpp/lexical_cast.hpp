@@ -136,10 +136,10 @@ namespace aux
 }
 
 template<typename T> constexpr auto of = [] {};
+template<typename T> struct extraction_info;
 
 namespace aux
 {
-    template<typename T> struct extraction_info;
     template<typename T> concept TypeListable = requires {[]<typename ...Ts>(type_list<Ts...>) {}(T{}); };
     template<typename T> concept IStreamable = requires(T t, std::istream &is) { is >> t; };
     template<typename T> concept StringLike = std::constructible_from<T, std::string_view> && !IStreamable<T>;
@@ -155,20 +155,22 @@ namespace aux
     template<StringLike Target> constexpr auto extract(std::string_view, char) -> Target;
     template<Extractable Target> constexpr auto extract(std::string_view, char delimiter) -> Target;
     template<DynamicallyExtractable Target> constexpr auto extract(std::string_view, char delimiter) -> Target;
+}
 
-    template<typename Common> struct extraction_info {
-        std::size_t (*argc_functor)(std::string_view, char);
-        Common (*factory_functor)(std::string_view, char);
+template<typename Common> struct extraction_info {
+    std::size_t (*argc_functor)(std::string_view, char);
+    Common (*factory_functor)(std::string_view, char);
 
-        template<typename Concrete> constexpr static auto of() -> extraction_info<Common>
-            requires (std::convertible_to<Concrete*, Common*> || std::convertible_to<Concrete, Common>) {
-            return extraction_info<Common>{
-                .argc_functor = extract_argc<Concrete>,
-                .factory_functor = [](std::string_view sv, char delim) -> Common { return extract<Concrete>(sv, delim); }
-            };
-        }
-    };
+    template<typename Concrete> constexpr static auto of() -> extraction_info<Common>
+        requires (std::convertible_to<Concrete*, Common*> || std::convertible_to<Concrete, Common>) {
+        return extraction_info<Common>{
+            .argc_functor = aux::extract_argc<Concrete>,
+            .factory_functor = [](std::string_view sv, char delim) -> Common { return aux::extract<Concrete>(sv, delim); }
+        };
+    }
+};
 
+namespace aux {
     template<StringLike Target> constexpr auto extract_argc(std::string_view, char) -> std::size_t { return 1UL; }
     template<StringLike Target> constexpr auto extract(std::string_view sv, char) -> Target { return sv; }
 
