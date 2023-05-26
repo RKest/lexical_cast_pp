@@ -97,6 +97,9 @@ int main()
     assert(std::holds_alternative<Circle>(circle));
     assert(std::holds_alternative<Rectangle>(rectangle));
 }
-// *Provided that type has its own `lpp::of` specialization
+// *Provided that type 
+// - has its own `lpp::of` specialization or
+// - Is can be populated with the `operator>>` (note that "from-string conversion", happens via `boost::lexical_cast` still) or
+// - Can be implicitely converted from a std::string_view` (eg. std::string)
 ```
 
