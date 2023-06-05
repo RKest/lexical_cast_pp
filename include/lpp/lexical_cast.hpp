@@ -67,21 +67,28 @@ namespace aux
     static_assert(std::same_as<enumerate_t<type_list<int, char>>, type_list<enumerated<int, 0>, enumerated<char, 1>>>);
     static_assert(std::same_as<nth_pack<1, int, char>, char>);
     static_assert(std::same_as<nth<1, type_list<int, char>>, char>);
+}
 
-    template <auto Start, auto End, auto Inc, class F>
-    constexpr void constexpr_for(F&& f)
+namespace aux
+{
+    template<typename T> concept Char = std::same_as<T, char>;
+    template<typename T> concept Predicate = std::same_as<nth<0, args_t<T>>, char> || std::same_as<nth<0, args_t_not_ptr<T>>, char>;
+    template<typename T> concept Delimiter = Char<T> || Predicate<T>;
+
+    constexpr auto find(auto begin, auto end, Char auto delim) { return std::find(begin, end, delim); }
+    constexpr auto find(auto begin, auto end, Predicate auto delim) { return std::find_if(begin, end, delim); }
+}
+
+namespace aux
+{
+    template <auto Start, auto End, auto Inc>
+    constexpr void constexpr_for(auto&& for_body)
     {
         if constexpr (Start < End)
         {
-            f(std::integral_constant<decltype(Start), Start>());
-            constexpr_for<Start + Inc, End, Inc>(f);
+            for_body(std::integral_constant<decltype(Start), Start>());
+            constexpr_for<Start + Inc, End, Inc>(for_body);
         }
-    }
-
-    template <bool cond_v, typename Then, typename OrElse>
-    constexpr auto constexpr_if(Then&& then, OrElse&& or_else) -> decltype(auto) {
-        if constexpr (cond_v) { return std::forward<Then>(then);}
-        else { return std::forward<OrElse>(or_else); }
     }
 
     // The behaviour for pivot equal to the number of words in the string_view is undefined
@@ -119,6 +126,7 @@ namespace aux
                 std::ptrdiff_t sz = 0;
                 while (len-- > 0) {
                     auto temp = std::find(it, whole.end(), delimiter) + 1;
+                    if (it == temp) { throw std::invalid_argument("Too few arguments"); }
                     sz += std::distance(it, temp);
                     it = temp;
                 }
